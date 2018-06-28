@@ -1,0 +1,485 @@
+####################################
+#	GxE for Jackie Taylor
+#
+#	Analyst: Erin Ware
+####################################
+
+#	1. Set up
+#		1.1: File locations
+#		1.2: Pull regions -- defined through UCSD Genome Browser, build 37/hg19
+# 		1.3: Pull Annotation -- to filter out SNPs with info <0.5 
+# 		1.4: Create SetIDs for SKAT (if needed) includes info>.5 SNPs and gene name 
+# 		1.5: Get residuals for methylation - adjusted for plate, cell type and smoking
+# 		1.6: Histograms for methylation residuals 
+# 		1.7: Write genetic files to create burden scores MAF<0.05
+# 		1.8: Write genetic files to create burden scores MAF<0.01
+
+
+##########################################################
+#	1.1: File locations
+##########################################################
+
+Genetic Data:
+
+Need to pull regions for analysis
+/home/skardia_lab/club_house/research/projects/GENOA_GWA/Data/GENOA_Phasing_Oct_2012/Jack/Final
+/home/skardia_lab/club_house/research/projects/GENOA_GWA/Data/GENOA_Phasing_Oct_2012/Jack/Annotation
+/home/skardia_lab/club_house/research/projects/GENOA_GWA/Data/GENOA_Phasing_Oct_2012/Jack/Annotations
+
+1000G PCA:
+/home/skardia_lab/club_house/research/projects/GENOA_GWA/Data/Mayo_ARIC_Merge/dosesplit_for_Jack_affy_illumina_aric/Jack1599_10PC.csv
+ 
+These are the .gen files:
+/home/skardia_lab/club_house/research/projects/GENOA_GWA/Data/GENOA_Phasing_Oct_2012/Jack/Final/SNPTEST
+
+
+##########################################################
+# 1.2: Pull regions -- defined through UCSD Genome Browser, build 37/hg19 #
+##########################################################
+
+
+cd /home/skardia_lab/club_house/research/projects/GENOA_GWA/Data/GENOA_Phasing_Oct_2012/Jack/Final
+awk '($4 > 68680344 && $4< 69430416)' Jack1599fwd_Hg19_file374.impute2 > /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/CTNNA3.impute2
+awk '($4 > 85092100 && $4< 85839078)' Jack1599fwd_Hg19_file320.impute2 > /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/RALYL.impute2
+awk '($4 > 49702674 && $4< 50242161)' Jack1599fwd_Hg19_file535.impute2 > /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/CA10.impute2
+awk '($4 > 117885817 && $4< 118411028)' Jack1599fwd_Hg19_file443.impute2 > /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/KSR2.impute2
+awk '($4 > 19791582 && $4< 19829770)' Jack1599fwd_Hg19_file306.impute2 > /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/LPL.impute2
+awk '($4 > 116655086 && $4< 116668136)' Jack1599fwd_Hg19_file414.impute2 > /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/APOA5.impute2
+awk '($4 > 67968787 && $4< 67983015)' Jack1599fwd_Hg19_file519.impute2 > /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/LCAT.impute2
+awk '($4 > 44061103 && $4< 44110605)' Jack1599fwd_Hg19_file58.impute2 > /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/ABCG8.impute2
+awk '($4 > 72037643 && $4< 72064316)' Jack1599fwd_Hg19_file519.impute2 > /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/DHODH.impute2
+
+cd /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/
+wc -l *.impute2
+
+8001 CTNNA3.impute2
+8224 RALYL.impute2
+5745 CA10.impute2
+4105 KSR2.impute2
+508 LPL.impute2
+122 APOA5.impute2
+94 LCAT.impute2
+782 ABCG8.impute2
+258 DHODH.impute2
+
+
+
+##########################################################
+# 1.3: Pull Annotation -- to filter out SNPs with info <0.5 #
+##########################################################
+
+
+cd /home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic
+awk '($1=10)' Jack1599fwd_Hg19_v2.anno | awk '($4 > 68680344 && $4 < 69430416 && $6 > 0.5 && $16 > 0.5)' > CTNNA3.annot
+awk '($1=8)' Jack1599fwd_Hg19_v2.anno | awk '($4 > 85092100 && $4 < 85839078 && $6 > 0.5 && $16 > 0.5)' > RALYL.annot
+awk '($1=17)' Jack1599fwd_Hg19_v2.anno | awk '($4 > 49702674 && $4 < 50242161 && $6 > 0.5 && $16 > 0.5)' > CA10.annot
+awk '($1=12)' Jack1599fwd_Hg19_v2.anno | awk '($4 > 117885817 && $4 < 118411028 && $6 > 0.5 && $16 > 0.5)' > KSR2.annot
+awk '($1=8)' Jack1599fwd_Hg19_v2.anno | awk '($4 > 19791582 && $4 < 19829770 && $6 > 0.5 && $16 > 0.5)' > LPL.annot
+awk '($1=11)' Jack1599fwd_Hg19_v2.anno | awk '($4 > 116655086 && $4 < 116668136 && $6 > 0.5 && $16 > 0.5)' > APOA5.annot
+awk '($1=16)' Jack1599fwd_Hg19_v2.anno | awk '($4 > 67968787 && $4 < 67983015 && $6 > 0.5 && $16 > 0.5)' > LCAT.annot
+awk '($1=2)' Jack1599fwd_Hg19_v2.anno | awk '($4 > 44061103 && $4 < 44110605 && $6 > 0.5 && $16 > 0.5)' > ABCG8.annot
+awk '($1=16)' Jack1599fwd_Hg19_v2.anno | awk '($4 > 72037643 && $4 < 72064316 && $6 > 0.5 && $16 > 0.5)' > DHODH.annot
+
+wc -l *.annot
+91304 CTNNA3.annot
+90344 RALYL.annot
+70468 CA10.annot
+48049 KSR2.annot
+6322 LPL.annot
+1064 APOA5.annot
+1813 LCAT.annot
+6878 ABCG8.annot
+3349 DHODH.annot
+
+
+
+
+Chr	Affy_snp_id	Reference_rs_id	Reference_position	Affy_exp_freq_a1	Affy_info	Affy_certainty	Affy_type	Affy_info_type0	Affy_concord_type0	Affy_r2_type0	Illumina_snp_id	Illumina_rs_id	Illumina_position	Illumina_exp_freq_a1	Illumina_info	Illumina_certainty	Illumina_type	Illumina_info_type0	Illumina_concord_type0	Illumina_r2_type0	ARIC_snp_id	ARIC_rs_id	ARIC_position	ARIC_exp_freq_a1	ARIC_info	ARIC_certainty	ARIC_type	ARIC_info_type0	ARIC_concord_type0	ARIC_r2_type0
+
+
+
+##########################################################
+# 1.4: Create SetIDs for SKAT (if needed) includes info>.5 SNPs and gene name 
+##########################################################
+
+##### IN R ######
+##### To create setID file ######
+##### no header, space delim: SETID SNPID ######
+
+setwd("/home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic")
+
+list<-c("CTNNA3","RALYL","CA10","KSR2","LPL","APOA5","LCAT","ABCG8","DHODH")
+
+
+for (i in list){
+anno<-read.table(paste0(i,".annot"),header=F,sep='', colClasses=c("integer","NULL","character",rep("NULL",28)))
+gene<-read.table(paste0(i,".impute2"),header=F,sep=' ',colClasses=c("character","character","character",rep("NULL",1602)))
+
+temp<-merge(anno, gene, by.x="V3", by.y="V3")
+dim(temp)
+temp$gene<-i
+
+temp2<-temp[,c(5,1)]
+
+write.table(temp2, paste0(i,".SetID"),col.names=F,row.names=F,quote=F,sep=' ')
+print(paste0("Done with ",i))
+}
+
+
+wc -l *.SetID
+5416 CTNNA3.SetID
+5290 RALYL.SetID
+3588 CA10.SetID
+2777 KSR2.SetID
+363 LPL.SetID
+81 APOA5.SetID
+51 LCAT.SetID
+583 ABCG8.SetID
+161 DHODH.SetID
+
+
+
+
+
+##########################################################
+# 1.5: Get residuals for methylation - adjusted for plate, cell type and smoking
+##########################################################
+#	SCRIPT FILE:	MetsProject_get_methylation_residuals_V2.R
+
+setwd("/home/skardia_lab/club_house/science/users/ebakshis/Taylor/Results/")
+lme_data<-read.csv("CurrentSmoke_CD8T_CD4T_NK_Bcell_Mono_Gran_Plate_Name.20180302.residuals_M.csv")
+
+##########################################################
+# 1.6: Histograms for methylation residuals 
+##########################################################
+
+setwd("/home/skardia_lab/club_house/science/users/ebakshis/Taylor/Results")
+#"PABPC4",
+
+#List out all Genes
+list<-c("cg00132141","cg09538287","cg08918749","cg22108175","cg02157083","cg25682080","cg01489608","cg26924825","cg07817698","cg22381196")
+
+resids<-read.csv("CurrentSmoke_CD8T_CD4T_NK_Bcell_Mono_Gran_Plate_Name.20180305.residuals_M.csv")
+
+for (i in list){
+png(paste0(i,".histogram.png"))
+hist(resids[,i], main=paste0("Histogram of methylation site: ",i), xlab="Residualized M value")
+dev.off()
+print(paste0("Done with ",i))
+}
+
+
+
+##########################################################
+# 1.7: Write genetic files to create burden scores MAF<0.05
+# 1.8: Write genetic files to create burden scores MAF<0.01
+##########################################################
+
+##### Write genetic files to create burden scores MAF<0.05######
+setwd("/home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic")
+
+#List out all Genes
+list<-c("CTNNA3","RALYL","CA10","KSR2","LPL","APOA5","LCAT","ABCG8","DHODH")
+
+
+pins<-read.table("Jack1599.sample",header=T,sep="")
+pin2<-pins[2:1600,]
+head(pin2)
+
+#Loop through all genes
+for (i in list){
+
+#read in SNP and setID to prune out SNPs that don't have good imputation quality
+snps<-read.table(paste0(i,".SetID"),header=F,sep='')
+gene<-read.table(paste0(i,".impute2"),header=F,sep=' ')
+
+temp<-merge(snps, gene[,-2], by.x="V2", by.y="V3")
+dim(temp)
+rownames(temp)<-temp$V2
+num_ids <- dim(temp)[2]
+
+transp<-t(temp[,7:num_ids])
+rownames(transp)<-pin2$ID_1
+
+#Check a few columns of the temp file
+summary(transp[,1:20])
+
+#Set width of file
+num_snps <- dim(transp)[2]
+
+rn<-pin2$ID_1
+df<-as.data.frame(rn)
+colnames(df)<-"PIN"
+
+for (j in 1:num_snps) {
+   #Change to best calls
+	for(n in 1:1599){
+		if (transp[n,j]>=0 & transp[n,j]<0.5){
+			transp[n,j]=0
+			} else if (transp[n,j]>=0.5 & transp[n,j]<1.5) {
+			transp[n,j]=1
+			} else {
+			transp[n,j]=2
+		}
+	}
+	
+   #Calculate mean and flip if not MA	
+	a<-mean(transp[,j])
+	if (a>1){
+		transp[,j]=2-transp[,j] 
+		} else {transp[,j] = transp[,j]}
+	
+   #Print if MAF <05 or MAF <01
+	
+	f<-mean(transp[,j])
+	if (f<=0.05){
+		df<-cbind(df,transp[,j])
+		lc<-dim(df)[2]
+		x<-colnames(transp)[j]
+		colnames(df)[lc]<-x
+	}
+
+}
+
+ncols<-dim(df)[2]
+burden<-as.data.frame(rowSums(df[,2:ncols]))
+colnames(burden)<-paste0(i)
+
+write.table(burden, paste0(i,".burden05score"),col.names=T,row.names=T,quote=F,sep=' ')
+print(paste0("Done with ",i, " there are ",ncols-1," rare variants with MAF <5%"))
+}
+
+
+##### Write genetic files to create burden scores MAF<0.01######
+setwd("/home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic")
+
+#List out all Genes
+list<-c("CA10","KSR2","LPL","APOA5","LCAT","ABCG8","DHODH","CTNNA3","RALYL")
+
+pins<-read.table("Jack1599.sample",header=T,sep="")
+pin2<-pins[2:1600,]
+head(pin2)
+
+#Loop through all genes
+for (i in list){
+
+#read in SNP and setID to prune out SNPs that don't have good imputation quality
+snps<-read.table(paste0(i,".SetID"),header=F,sep='')
+gene<-read.table(paste0(i,".impute2"),header=F,sep=' ')
+
+temp<-merge(snps, gene[,-2], by.x="V2", by.y="V3")
+dim(temp)
+rownames(temp)<-temp$V2
+num_ids <- dim(temp)[2]
+
+transp<-t(temp[,7:num_ids])
+rownames(transp)<-pin2$ID_1
+
+#Check a few columns of the temp file
+summary(transp[,1:20])
+
+#Set width of file
+num_snps <- dim(transp)[2]
+
+rn<-pin2$ID_1
+df<-as.data.frame(rn)
+colnames(df)<-"PIN"
+
+for (j in 1:num_snps) {
+   #Change to best calls
+	for(n in 1:1599){
+		if (transp[n,j]>=0 & transp[n,j]<0.5){
+			transp[n,j]=0
+			} else if (transp[n,j]>=0.5 & transp[n,j]<1.5) {
+			transp[n,j]=1
+			} else {
+			transp[n,j]=2
+		}
+	}
+	
+   #Calculate mean and flip if not MA	
+	a<-mean(transp[,j])
+	if (a>1){
+		transp[,j]=2-transp[,j] 
+		} else {transp[,j] = transp[,j]}
+	
+   #Print if MAF <05 or MAF <01
+	
+	f<-mean(transp[,j])
+	if (f<=0.01){
+		df<-cbind(df,transp[,j])
+		lc<-dim(df)[2]
+		x<-colnames(transp)[j]
+		colnames(df)[lc]<-x
+	}
+
+}
+
+ncols<-dim(df)[2]
+burden<-as.data.frame(rowSums(df[,2:ncols]))
+colnames(burden)<-paste0(i)
+
+write.table(burden, paste0(i,".burden01score"),col.names=T,row.names=T,quote=F,sep=' ')
+print(paste0("Done with ",i, " there are ",ncols-1," rare variants with MAF <1%"))
+}
+
+
+"Done with CTNNA3 there are 2344 rare variants with MAF <5%"
+"Done with RALYL there are 2526 rare variants with MAF <5%"
+"Done with CA10 there are 1505 rare variants with MAF <5%"
+"Done with KSR2 there are 974 rare variants with MAF <5%"
+"Done with LPL there are 130 rare variants with MAF <5%"
+"Done with APOA5 there are 33 rare variants with MAF <5%"
+"Done with LCAT there are 28 rare variants with MAF <5%"
+"Done with ABCG8 there are 178 rare variants with MAF <5%"
+"Done with DHODH there are 59 rare variants with MAF <5%"
+
+
+"Done with CA10 there are 482 rare variants with MAF <1%"
+"Done with KSR2 there are 226 rare variants with MAF <1%"
+"Done with LPL there are 34 rare variants with MAF <1%"
+"Done with APOA5 there are 6 rare variants with MAF <1%"
+"Done with LCAT there are 2 rare variants with MAF <1%"
+"Done with ABCG8 there are 35 rare variants with MAF <1%"
+"Done with DHODH there are 19 rare variants with MAF <1%"
+"Done with CTNNA3 there are 782 rare variants with MAF <1%"
+"Done with RALYL there are 826 rare variants with MAF <1%"
+
+
+
+
+
+
+##########################################################
+# 1.9: Combine pheno, geno, epigenetic files together
+##########################################################
+
+##### Write genetic files to create burden scores ######
+setwd("/home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic")
+
+#"CA10",
+
+#List out all Genes
+list<-c("KSR2","LPL","APOA5","LCAT","ABCG8","DHODH","CTNNA3","RALYL")
+
+bsco1<-read.table("CA10.burden01score",header=T,sep='')
+bsco5<-read.table("CA10.burden05score",header=T,sep='')
+
+a<-cbind(bsco1, bsco5)
+
+for (i in list){
+bsco1<-read.table(paste0(i,".burden01score"),header=T,sep='')
+bsco5<-read.table(paste0(i,".burden05score"),header=T,sep='')
+
+b<-cbind(bsco1, bsco5)
+
+a<-cbind(a,b)
+
+}
+
+write.csv(a, "AA.burdenscores.csv",quote=F)
+
+
+
+##### Create BINARY burden scores in excel ######
+CA10_01	CA10_05	KSR2_01	KSR2_05	LPL_01	LPL_05	APOA5_01	APOA5_05	LCAT_01	LCAT_05	ABCG8_01	ABCG8_05	DHODH_01	DHODH_05	CTNNA3_01	CTNNA3_05	RALYL_01	RALYL_05
+
+CA10_01med	CA10_05med	KSR2_01med	KSR2_05med	LPL_01med	LPL_05med	APOA5_01med	APOA5_05med	LCAT_01med	LCAT_05med	ABCG8_01med	ABCG8_05med	DHODH_01med	DHODH_05med	CTNNA3_01med	CTNNA3_05med	RALYL_01med	RALYL_05med
+
+
+##### Grab two new methylation sites ######
+
+		##		wd<-"/home/skardia_lab/club_house/research/projects/GENOA_Methylation_27K"
+		##		ugh<-estimateM("/home/skardia_lab/club_house/research/projects/GENOA_Methylation_27K/Jack973.adj_color.adj_bg.qnorm.Mvalue", returnType="matrix", offset=100)
+		##		ugh[1:10,1:10]
+		##		ugh2<-as.matrix(t(ugh))
+		##		
+		##		#Set up matrix of wanted CpG sites plus sample ID
+		##		a<-c("cg00132141","cg09538287","cg08918749","cg22108175","cg02157083","cg25682080","cg01489608","cg26924825","cg07817698","cg22381196")
+		##		
+		##		#Subset cpg to be only wanted cpgs
+		##		small<-ugh2[,colnames(ugh2) %in% a]
+		##		
+		##		b<-as.matrix(rownames(small))
+		##		ugh3<-cbind(b, small)
+		##		colnames(ugh3)[1]<-"SampleID"
+		##		
+		##		#Write cpg file
+		##		write.table(ugh3,"/home/skardia_lab/club_house/science/users/ebakshis/Taylor/rawgenetic/27k_CTNNA3_region.csv",sep=",",row.names=F,col.names=T,quote=F)
+		##		
+
+
+##### Merge burden scores with Phenotype data ######
+setwd("/home/skardia_lab/club_house/science/users/ebakshis/Taylor/data")
+burden1<-read.csv("../rawgenetic/AA.burdenscores.binary.csv")
+burden2<-read.csv("../rawgenetic/AA.burdenscores.binary.median.csv")
+burden<-merge(burden1, burden2, by.x="X", by.y="X")
+colnames(burden)[1]<-"PIN"
+
+pheno<-read.csv("pheno_rawmethyl739.csv")
+pheno2<-pheno[,-c(2:11)]	#remove raw cpg sites
+resids<-read.csv("/home/skardia_lab/club_house/science/users/ebakshis/Taylor/Results/CurrentSmoke_CD8T_CD4T_NK_Bcell_Mono_Gran_Plate_Name.20180305.residuals_M.csv")
+
+all1<-merge(pheno2, burden, by="PIN")
+all<-merge(all1, resids, by.x="PIN")
+dim(all)
+write.csv(all, "pheno.geno.methyl.739.csv",quote=F)
+
+
+
+
+
+
+
+##########################################################
+# 2.1: Burden Scores for 36 gene regions on MetS
+#		Adjust for PC1-4, age, and sex
+##########################################################
+#	SCRIPT FILE:	glmer.GENOA.burdenmethyl.R
+burden	MAF	n	int_beta	int_beta_se	int_beta_Z	int_beta_p	burden_beta	burden_beta_se	burden_beta_Z	burden_beta_p
+FRK	1	739	-2.311415476	0.850860239	-2.716563038	0.006596363	-0.287529531	0.207198081	-1.387703637	0.165227308
+ST3GAL4	1	739	-2.310193129	0.849944229	-2.71805261	0.00656674	-0.581415201	0.25492233	-2.280754308	0.02256299
+
+ABCA8	1	739	-2.241089728	0.844400277	-2.654060863	0.007952948	-0.484825626	0.223668278	-2.167610133	0.030188362
+FER1L4	1	739	-2.295830413	0.845496658	-2.715363084	0.006620314	0.528582342	0.332727499	1.588634373	0.112142963
+FER1L4	5	739	-2.502830689	0.859641722	-2.911481174	0.003597196	0.229062714	0.176546174	1.297466314	0.194470788
+LDLR	5	739	-2.641981234	0.840062544	-3.144981589	0.001660973	0.351801632	0.201910155	1.742367201	0.081444211
+PABPC4	1	739	-2.454913602	0.85116999	-2.884163719	0.003924547	0.59148053	0.247197046	2.392749179	0.016722669
+PABPC4	5	739	-2.481830976	0.850644444	-2.917589122	0.003527488	0.319060986	0.177706946	1.795433399	0.072584675
+PLA2G6	5	739	-2.604784176	0.870112394	-2.993618058	0.002756908	0.329470649	0.213502493	1.543170035	0.122789526
+STARD3	5	739	-2.620994656	0.859986428	-3.047716301	0.002305875	0.386038951	0.180017121	2.144456859	0.031996299
+HMGCR	5	739	-2.561036854	0.001652961	-1549.362946	0	0.314292762	0.001593197	197.2717261	0
+
+
+##########################################################
+# 2.3: M* for 66 Methylation sites on MetS
+#		Adjust for age, and sex
+##########################################################
+#	SCRIPT FILE:	glmer.GENOA.burdenmethyl.R
+Methylation site	Gene	chr	int_beta	int_beta_se	int_beta_Z	int_beta_p	burden_beta	burden_beta_se	burden_beta_Z	burden_beta_p
+cg00430287	FRK	6	-2.256612741	0.821063262	-2.74840301	0.005988635	0.120423922	0.087266104	1.37996216	0.167598296
+cg08203715	ST3GAL4	11	-2.284686467	0.816596521	-2.797815576	0.005144948	0.116930619	0.085039562	1.375014363	0.169126992
+cg04304927	SLC39A8	4	-2.239835965	0.823355276	-2.720376039	0.006520772	0.141753386	0.0900618	1.573956832	0.11549743
+cg05337441	APOB	2	-2.279871955	0.820362598	-2.779102754	0.005450928	0.113481887	0.086433589	1.312937353	0.189204059
+cg12137206	GPAM	10	-2.178736387	0.82125982	-2.652919739	0.007979884	-0.152514358	0.086869088	-1.755680431	0.07914299
+cg16046465	FRMD5	15	-2.252272714	0.82625165	-2.725891941	0.006412799	0.153783499	0.085370259	1.801370891	0.071644441
+cg17754680	NPC1L1	7	-2.275622047	0.826099834	-2.754657432	0.005875362	-0.140327607	0.094847199	-1.479512398	0.13900342
+cg18994063	TIMD4	5	-2.337522348	0.82245621	-2.842123774	0.004481409	0.138398917	0.08674587	1.595452511	0.110611082
+cg19248557	HLA-DRA	6	-2.265473679	0.825699007	-2.743704012	0.006075029	-0.120719802	0.087303107	-1.382766378	0.166736511
+
+
+
+##########################################################
+# 2.4: Burden*M* for 2 sites with pval<0.2
+#		Adjust for age, sex, PC1-4
+##########################################################
+#	SCRIPT FILE:	glmer.GENOA.burdenmethyl.R
+methyl	gene	n	gene_beta	gene_beta_se	gene_beta_p	methyl_beta	methyl_beta_se	methyl_beta_p	GxE_beta	GxE_beta_se	GxE_beta_p	gene_beta_Z	methyl_beta_Z	GxE_beta_Z
+cg00430287	FRK_01	739	-0.278	0.208	0.180	0.117	0.088	0.185	NA	NA	NA	-1.339234676	1.325262457	NA
+cg00430287	FRK_01	739	-0.278	0.209	0.183	-0.001	0.103	0.991	0.446	0.206	0.030	-1.330491667	-0.011448706	2.16749279
+														
+cg08203715	ST3GAL4_01	739	-0.595	0.254	0.019	0.122	0.086	0.155	NA	NA	NA	-2.338670189	1.422180946	NA
+cg08203715	ST3GAL4_01	739	-0.604	0.257	0.019	0.113	0.092	0.218	0.065	0.252	0.796	-2.346434952	1.23090526	0.258184406
+
+
+
